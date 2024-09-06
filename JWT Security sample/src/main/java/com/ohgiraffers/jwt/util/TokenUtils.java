@@ -88,13 +88,19 @@ public class TokenUtils {
      * @return String - token
      * */
     public static String generateJwtToken(Member member) {
+        // 토큰 만료시간 설정
         Date expireTime = new Date(System.currentTimeMillis() + tokenValidateTime);
 
         JwtBuilder builder = Jwts.builder()
+                // 토큰 헤더 설정
                 .setHeader(createHeader())
+
+                // 토큰에 담길 payload설정
                 .setClaims(createClaims(member))
                 .setSubject(member.getMemberEmail())
                 .signWith(SignatureAlgorithm.HS256, createSignature())
+
+                // 토큰 시그니처 설정
                 .setExpiration(expireTime);
 
         return builder.compact();
@@ -107,8 +113,11 @@ public class TokenUtils {
     private static Map<String, Object> createHeader(){
         Map<String, Object> header = new HashMap<>();
 
+        // 토큰 타입
         header.put("type", "jwt");
+        // 토큰에 사용된 알고리즘
         header.put("alg", "HS256");
+        // 토큰 생성일
         header.put("date", System.currentTimeMillis());
 
         return header;
@@ -137,7 +146,10 @@ public class TokenUtils {
      * @return key
      * */
     private static Key createSignature(){
+        // HS256 알고리즘을 사용해서 Base64로 인코딩된 비밀키를 바이트 배열로 변환
         byte[] secretBytes = DatatypeConverter.parseBase64Binary(jwtSecretKey);
+
+        // 서명에 사용할 수 있는 Key 객체로 변환하는 과정
         return new SecretKeySpec(secretBytes, SignatureAlgorithm.HS256.getJcaName());
     }
 

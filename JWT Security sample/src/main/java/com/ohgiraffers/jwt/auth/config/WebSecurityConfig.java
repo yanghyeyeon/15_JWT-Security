@@ -32,6 +32,11 @@ public class WebSecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer(){
 
+        // 특정 요청에대해 spring security filter chain을 건너뛰도록 하는 역할
+
+        // WebConfig에 설정하나 addResourceHandler는 정적 자원에 대해 요청을 할 수 있게 해주는 역할
+        // webSecurityCustomizer 는 특정 요청에 대해 filterChain을 건너뛰도록 설정하는 역할
+
         return web -> web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
 
@@ -40,10 +45,16 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+                // csrf (Cross-Site-Request-Forgery)
+                // RESTAPI 혹은 JWT 기반 인증에서는 세션을 사용하지 않아서 보호를 하지 않아도 됨.
                 .csrf(AbstractHttpConfigurer::disable)
+                // 어플리케이션의 session 상태를 비저장 모드로 동작하게 함
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 기존 formlogin을 사용하지 않으므로 비활성화
                 .formLogin(AbstractHttpConfigurer::disable)
+                // http 기본인증 (JWT를 사용할것이므로) 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)
+
                 .addFilterBefore(customAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthorizationFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
@@ -93,12 +104,17 @@ public class WebSecurityConfig {
 
         CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManager());
 
+        // /login 으로 post 요청이 들어오면 필터가 동작한다.
         customAuthenticationFilter.setFilterProcessesUrl("/login");
 
+        // 인증 성공시 동작할 핸들러 설정
         customAuthenticationFilter.setAuthenticationSuccessHandler(customAuthLoginSuccessHandler());
 
+        // 인증 실패시 동작할 핸들러 설정
         customAuthenticationFilter.setAuthenticationFailureHandler(customAuthFailUserHandler());
 
+        // 필터의 모든 속성 설정을 완료했을때
+        // 올바르게 설정되어있는지 확인하는 역할의 메서드
         customAuthenticationFilter.afterPropertiesSet();
 
         return customAuthenticationFilter;
