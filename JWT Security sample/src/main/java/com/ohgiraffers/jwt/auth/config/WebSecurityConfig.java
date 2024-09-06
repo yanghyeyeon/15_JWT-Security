@@ -55,8 +55,14 @@ public class WebSecurityConfig {
                 // http 기본인증 (JWT를 사용할것이므로) 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)
 
+                // 사용자가 입력한 아이디 패스워드를 전달받아 로그인을 직접적으로 수행하는 필터
+                // 인증시(successHandler를 통해) 토큰을 생성해서 header로 전달하고
+                // 실패시(failureHandler를 통해) 실패 이유를 담아서 응답한다.
                 .addFilterBefore(customAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+
+                // header에 token이 담겨져 왔을 경우 인가처리를 해주는 필터
                 .addFilterBefore(jwtAuthorizationFilter(), BasicAuthenticationFilter.class)
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/signup", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll() // Swagger 관련 리소스와 회원가입 경로 허용
                         .requestMatchers("/test").hasRole("ADMIN")
@@ -117,6 +123,7 @@ public class WebSecurityConfig {
         // 올바르게 설정되어있는지 확인하는 역할의 메서드
         customAuthenticationFilter.afterPropertiesSet();
 
+        // 완성된 CustomAuthenticationFilter 를 반환한다.
         return customAuthenticationFilter;
     }
 

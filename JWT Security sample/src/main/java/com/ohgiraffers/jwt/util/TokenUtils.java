@@ -49,7 +49,7 @@ public class TokenUtils {
     }
 
     /**
-     * 유요한 토큰인지 확인하는 메서드
+     * 유효한 토큰인지 확인하는 메서드
      * @param token : 토큰
      * @return boolean : 유효 여부
      * @throws ExpiredJwtException, {@link JwtException} {@link NullPointerException}
